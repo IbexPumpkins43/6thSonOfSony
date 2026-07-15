@@ -1,9 +1,11 @@
-"""YouTube extraction and Spotify-to-YouTube resolution."""
+"""yt-dlp collection extraction and Spotify-to-YouTube resolution."""
 
 import re
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 import spotipy
 import yt_dlp
@@ -15,15 +17,47 @@ from .config import Settings, YDL_OPTIONS, YDL_PLAYLIST_OPTIONS
 SPOTIFY_TRACK_RE = re.compile(r"open\.spotify\.com/track/([A-Za-z0-9]+)")
 SPOTIFY_ALBUM_RE = re.compile(r"open\.spotify\.com/album/([A-Za-z0-9]+)")
 SPOTIFY_PLAYLIST_RE = re.compile(r"open\.spotify\.com/playlist/([A-Za-z0-9]+)")
-YT_PLAYLIST_RE = re.compile(r"youtube\.com/.*[?&]list=([A-Za-z0-9_-]+)")
+
+
+@dataclass(frozen=True)
+class MediaCollection:
+    title: str
+    platform: str
+    tracks: list[dict]
 
 
 def is_spotify_url(url: str) -> bool:
     return "open.spotify.com" in url
 
 
-def is_youtube_playlist(url: str) -> bool:
-    return bool(YT_PLAYLIST_RE.search(url))
+def is_http_url(value: str) -> bool:
+    parsed = urlparse(value.strip())
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _platform_name(info: dict) -> str:
+    extractor = str(info.get("extractor_key") or info.get("extractor") or "")
+    normalized = extractor.lower()
+    if "youtube" in normalized:
+        return "YouTube"
+    if "soundcloud" in normalized:
+        return "SoundCloud"
+    if extractor:
+        return extractor.replace("_", " ").strip()
+    return "media"
+
+
+def _entry_webpage_url(entry: dict) -> str | None:
+    for key in ("webpage_url", "original_url", "url"):
+        candidate = entry.get(key)
+        if isinstance(candidate, str) and is_http_url(candidate):
+            return candidate
+
+    extractor = str(entry.get("ie_key") or entry.get("extractor_key") or "")
+    entry_id = entry.get("id")
+    if entry_id and "youtube" in extractor.lower():
+        return f"https://www.youtube.com/watch?v={entry_id}"
+    return None
 
 
 class MediaResolver:
@@ -36,23 +70,34 @@ class MediaResolver:
         )
 
     @staticmethod
-    def fetch_youtube_playlist(url: str) -> list[dict]:
-        """Return flat playlist entries without resolving stream URLs."""
+    def fetch_collection(url: str) -> MediaCollection | None:
+        """Return a flat collection for any direct URL supported by yt-dlp."""
         with yt_dlp.YoutubeDL(YDL_PLAYLIST_OPTIONS) as ydl:
             info = ydl.extract_info(url, download=False)
 
+        entries = info.get("entries")
+        if entries is None:
+            return None
+
         tracks = []
-        for entry in info.get("entries", []):
-            if not entry or not entry.get("id"):
+        for entry in entries:
+            if not entry:
+                continue
+            webpage_url = _entry_webpage_url(entry)
+            if not webpage_url:
                 continue
             tracks.append(
                 {
-                    "webpage_url": f"https://www.youtube.com/watch?v={entry['id']}",
-                    "title": entry.get("title", "Unknown Title"),
-                    "duration": entry.get("duration", 0),
+                    "webpage_url": webpage_url,
+                    "title": entry.get("title") or "Unknown Title",
+                    "duration": entry.get("duration") or 0,
                 }
             )
-        return tracks
+        return MediaCollection(
+            title=info.get("title") or "Untitled playlist",
+            platform=_platform_name(info),
+            tracks=tracks,
+        )
 
     @staticmethod
     def _spotify_request(
@@ -152,7 +197,7 @@ class MediaResolver:
                 info = info["entries"][0]
             return {
                 "stream_url": info["url"],
-                "title": info.get("title", "Unknown Title"),
+                "title": info.get("title") or "Unknown Title",
                 "webpage_url": info.get("webpage_url", url_or_query),
-                "duration": info.get("duration", 0),
+                "duration": info.get("duration") or 0,
             }

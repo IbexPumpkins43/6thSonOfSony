@@ -11,7 +11,7 @@ from discord.ext import commands
 
 from .checks import get_voice_access, send_ephemeral, voice_check
 from .config import FFMPEG_OPTIONS, Settings
-from .media import MediaResolver, is_spotify_url, is_youtube_playlist
+from .media import MediaResolver, is_http_url, is_spotify_url
 from .state import GuildMusicState, MusicStateStore
 from .views import (
     NowPlayingView,
@@ -402,10 +402,10 @@ class MusicCog(commands.Cog):
 
     @app_commands.command(
         name="play",
-        description="Add a YouTube/Spotify URL or search by name to the queue",
+        description="Add a YouTube, Spotify, or SoundCloud URL or search",
     )
     @app_commands.describe(
-        query="A YouTube/Spotify URL, or search terms like 'alice in chains'"
+        query="A supported track/playlist URL, or search terms like 'alice in chains'"
     )
     @voice_check(require_bot=False)
     async def play(self, interaction: discord.Interaction, query: str) -> None:
@@ -475,52 +475,53 @@ class MusicCog(commands.Cog):
                 await self.play_next(interaction.guild)
             return
 
-        if is_youtube_playlist(query):
-            await interaction.followup.send("📋 Fetching YouTube playlist...")
+        if is_http_url(query):
             try:
-                youtube_tracks = await asyncio.to_thread(
-                    self.media.fetch_youtube_playlist,
+                collection = await asyncio.to_thread(
+                    self.media.fetch_collection,
                     query,
                 )
             except Exception:
-                logger.exception("Failed to resolve a YouTube playlist")
-                await interaction.followup.send(
-                    "❌ I could not load that YouTube playlist. Please try again."
+                logger.info(
+                    "URL did not resolve as a playlist; trying it as a single track",
+                    exc_info=True,
                 )
-                return
+                collection = None
 
-            if not youtube_tracks:
-                await interaction.followup.send(
-                    "❌ No tracks were found in that playlist."
+            if collection is not None:
+                if not collection.tracks:
+                    await interaction.followup.send(
+                        "❌ No playable tracks were found in that playlist."
+                    )
+                    return
+
+                queued_tracks = [
+                    {
+                        "webpage_url": collection_track["webpage_url"],
+                        "title": collection_track["title"],
+                        "duration": collection_track["duration"],
+                        "requester": str(interaction.user.display_name),
+                    }
+                    for collection_track in collection.tracks
+                ]
+                should_start = await self._append_tracks(
+                    interaction.guild,
+                    queued_tracks,
                 )
+                collection_title = collection.title[:150]
+                await interaction.followup.send(
+                    f"➕ Added **{len(collection.tracks)} tracks** from "
+                    f"{collection.platform} playlist **{collection_title}**."
+                )
+                if should_start:
+                    await self.play_next(interaction.guild)
                 return
-
-            queued_tracks = [
-                {
-                    "webpage_url": youtube_track["webpage_url"],
-                    "title": youtube_track["title"],
-                    "duration": youtube_track["duration"],
-                    "requester": str(interaction.user.display_name),
-                }
-                for youtube_track in youtube_tracks
-            ]
-            should_start = await self._append_tracks(
-                interaction.guild,
-                queued_tracks,
-            )
-            await interaction.followup.send(
-                f"➕ Added **{len(youtube_tracks)} tracks** from YouTube playlist "
-                "to the queue."
-            )
-            if should_start:
-                await self.play_next(interaction.guild)
-            return
 
         await interaction.followup.send(f"🔍 Fetching info for `{query}`...")
         try:
             info = await asyncio.to_thread(self.media.fetch_audio_info, query)
         except Exception:
-            logger.exception("Failed to resolve a YouTube URL or search")
+            logger.exception("Failed to resolve a media URL or search")
             await interaction.followup.send(
                 "❌ I could not find playable audio for that request."
             )
@@ -747,7 +748,7 @@ class MusicCog(commands.Cog):
         embed.add_field(
             name="▶️ Playback",
             value=(
-                "`/play <url or search>` — Add a YouTube/Spotify URL or search by name\n"
+                "`/play <url or search>` — Add a supported track, playlist, or search\n"
                 "`/pause` — Pause the current track\n"
                 "`/resume` — Resume a paused track\n"
                 "`/skip` — Skip to the next track in the queue\n"
@@ -774,7 +775,7 @@ class MusicCog(commands.Cog):
             inline=False,
         )
         embed.set_footer(
-            text="Supports YouTube & Spotify links • Audio streamed via yt-dlp"
+            text="Supports YouTube, Spotify & SoundCloud • Audio streamed via yt-dlp"
         )
         await interaction.response.send_message(embed=embed)
 

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sixth-son-of-sony"
 version = "0.1.0"
-description = "A Discord music bot with YouTube and Spotify support"
+description = "A Discord music bot with YouTube, Spotify, and SoundCloud support"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

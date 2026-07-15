@@ -21,7 +21,7 @@ YDL_OPTIONS = {
     "no_warnings": False,
     "default_search": "auto",
     "source_address": "0.0.0.0",
-    "extractor-args": {
+    "extractor_args": {
         "soundcloud": {
             "formats": ["hls_aac"],
         }
@@ -30,6 +30,8 @@ YDL_OPTIONS = {
 
 YDL_PLAYLIST_OPTIONS = {
     "extract_flat": "in_playlist",
+    "noplaylist": False,
+    "ignoreerrors": True,
     "quiet": True,
     "no_warnings": True,
     "source_address": "0.0.0.0",

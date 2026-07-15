@@ -1,12 +1,12 @@
 # 6thSonOfSony
 
-A focused Discord music bot with per-server queues, interactive playback controls, and YouTube and Spotify link support.
+A focused Discord music bot with per-server queues, interactive playback controls, and YouTube, Spotify, and SoundCloud support.
 
 Spotify is used for track and playlist metadata. Audio for Spotify tracks is found on YouTube and streamed through `yt-dlp` and FFmpeg.
 
 ## Features
 
-- Play YouTube URLs, YouTube playlists, Spotify tracks, Spotify albums, Spotify playlists, or plain-text searches
+- Play YouTube tracks/playlists, Spotify tracks/albums/playlists, SoundCloud tracks/sets/playlists, or plain-text searches
 - Per-server queues with pagination, removal, clearing, looping, and next-track prefetching
 - Buttons for pause, resume, skip, stop, and loop
 - Same-channel authorization for every command or button that changes playback
@@ -20,6 +20,14 @@ Spotify is used for track and playlist metadata. Audio for Spotify tracks is fou
 - [Deno](https://docs.deno.com/runtime/getting_started/installation/) recommended for full YouTube support in current `yt-dlp` releases
 - A Discord application and bot token
 - A Spotify developer application with a client ID and client secret
+
+## Supported media
+
+- **YouTube:** individual videos, playlists, and YouTube Music playlist URLs
+- **Spotify:** tracks, albums, and playlists; audio is matched and streamed from YouTube
+- **SoundCloud:** individual tracks, sets, and playlists
+
+Other direct collection URLs supported by the installed `yt-dlp` backend are also detected automatically. Availability depends on the source website and the corresponding `yt-dlp` extractor.
 
 You can verify the external tools after installing them:
 
@@ -106,7 +114,7 @@ Application code lives in `src/sixth_son_of_sony`:
 | --- | --- |
 | `checks.py` | Shared voice-channel authorization |
 | `config.py` | Environment settings and FFmpeg/yt-dlp options |
-| `media.py` | Spotify metadata and YouTube stream resolution |
+| `media.py` | Spotify metadata and generic yt-dlp track/playlist resolution |
 | `state.py` | Per-server queue and playback state |
 | `views.py` | Now-playing and queue embeds/buttons |
 | `music.py` | Playback orchestration and slash commands |
@@ -121,7 +129,7 @@ The top-level `6thSonOfSony.py` file is retained as a small compatibility launch
 
 | Command | Description |
 | --- | --- |
-| `/play <url or search>` | Add a YouTube/Spotify link or search result to the queue |
+| `/play <url or search>` | Add a supported track, playlist, album, set, or search result |
 | `/pause` | Pause playback |
 | `/resume` | Resume playback |
 | `/skip` | Skip the current track |
