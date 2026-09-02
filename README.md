@@ -106,23 +106,6 @@ The `sixth-son-of-sony` console command and the original `python dukebox.py` com
 
 When startup succeeds, the terminal will show the bot account and confirm that its slash commands were synced. Global Discord commands can take a little while to appear after their first sync.
 
-## Project structure
-
-Application code lives in `src/sixth_son_of_sony`:
-
-| Module | Responsibility |
-| --- | --- |
-| `checks.py` | Shared voice-channel authorization |
-| `config.py` | Environment settings and FFmpeg/yt-dlp options |
-| `media.py` | Spotify metadata and generic yt-dlp track/playlist resolution |
-| `state.py` | Per-server queue and playback state |
-| `views.py` | Now-playing and queue embeds/buttons |
-| `music.py` | Playback orchestration and slash commands |
-| `bot.py` | Discord bot creation and command registration |
-| `__main__.py` | Application entry point |
-
-The top-level `dukebox.py` file is retained as a small compatibility launcher.
-
 ## Commands
 
 ### Music
@@ -140,34 +123,6 @@ The top-level `dukebox.py` file is retained as a small compatibility launcher.
 | `/loop` | Toggle looping for the current track |
 | `/nowplaying` | Show the current track |
 | `/help` | Show the music command list in Discord |
-
-## Troubleshooting
-
-### Missing environment variables
-
-If startup reports missing variables, confirm that `.env` is beside `dukebox.py`, that all three values are filled in, and that there are no extra spaces around the variable names.
-
-The old `discord_token.txt` and `spotify_token.txt` files are no longer used. After copying their values into `.env`, they can be removed from your machine.
-
-### FFmpeg is not found
-
-Install the FFmpeg application, then restart the terminal and run `ffmpeg -version`. Installing a Python package named `ffmpeg` is not a substitute for the FFmpeg executable.
-
-### YouTube extraction stops working
-
-YouTube changes frequently. First confirm that FFmpeg and Deno are available. If extraction still fails, check for a newer stable `yt-dlp` release, update its pinned version in `pyproject.toml`, and reinstall the requirements.
-
-### The bot connects but cannot play audio
-
-Confirm that the bot has **Connect** and **Speak** permissions in that voice channel and that the channel has not reached its user limit.
-
-### Slash commands do not appear
-
-Confirm that the bot was invited with the `applications.commands` scope. Restart the bot to sync commands again, then allow time for Discord's global command registration to propagate.
-
-## Dependency updates
-
-Direct runtime dependencies in `pyproject.toml` are pinned so installs stay predictable; `requirements.txt` installs the project in editable mode. Upgrade dependencies deliberately and test music playback, Spotify resolution, and the interactive controls before committing updated pins. `yt-dlp` usually needs updates more often than the other packages because supported websites change independently of this project.
 
 ## Tests
 
