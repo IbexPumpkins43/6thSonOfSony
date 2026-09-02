@@ -1,4 +1,4 @@
-# 6thSonOfSony
+# dukebox
 
 A focused Discord music bot with per-server queues, interactive playback controls, and YouTube, Spotify, and SoundCloud support.
 
@@ -102,7 +102,7 @@ Activate the virtual environment, then run the installed package:
 python -m sixth_son_of_sony
 ```
 
-The `sixth-son-of-sony` console command and the original `python 6thSonOfSony.py` command are also available after installation.
+The `sixth-son-of-sony` console command and the original `python dukebox.py` command are also available after installation.
 
 When startup succeeds, the terminal will show the bot account and confirm that its slash commands were synced. Global Discord commands can take a little while to appear after their first sync.
 
@@ -121,7 +121,7 @@ Application code lives in `src/sixth_son_of_sony`:
 | `bot.py` | Discord bot creation and command registration |
 | `__main__.py` | Application entry point |
 
-The top-level `6thSonOfSony.py` file is retained as a small compatibility launcher.
+The top-level `dukebox.py` file is retained as a small compatibility launcher.
 
 ## Commands
 
@@ -145,7 +145,7 @@ The top-level `6thSonOfSony.py` file is retained as a small compatibility launch
 
 ### Missing environment variables
 
-If startup reports missing variables, confirm that `.env` is beside `6thSonOfSony.py`, that all three values are filled in, and that there are no extra spaces around the variable names.
+If startup reports missing variables, confirm that `.env` is beside `dukebox.py`, that all three values are filled in, and that there are no extra spaces around the variable names.
 
 The old `discord_token.txt` and `spotify_token.txt` files are no longer used. After copying their values into `.env`, they can be removed from your machine.
 

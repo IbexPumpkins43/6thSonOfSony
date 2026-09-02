@@ -13,7 +13,7 @@ class VoiceAccess:
     voice_client: discord.VoiceClient | None
 
 
-VOICE_ACCESS_KEY = "sixth_son_voice_access"
+VOICE_ACCESS_KEY = "dukebox_voice_access"
 
 
 async def send_ephemeral(interaction: discord.Interaction, message: str) -> None:
