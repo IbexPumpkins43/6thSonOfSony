@@ -1,2 +1,0 @@
-# Installs this package and its pinned dependencies from pyproject.toml.
--e .
