@@ -1,0 +1,17 @@
+[package]
+name = "dukebox"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+dotenvy = "0.15"
+poise = "0.6"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+songbird = { version = "0.6", features = ["builtin-queue"] }
+symphonia = { version = "0.5", features = ["aac", "mp3", "isomp4", "alac"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+url = "2"
