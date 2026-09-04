@@ -1,6 +1,4 @@
-# Dukebox
-
-Dukebox is a deliberately small prototype Discord music bot written in Rust.
+# dukebox
 
 ## Features
 
